@@ -4,10 +4,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,28 +13,16 @@ import java.util.Map;
 public class ExeclUtil {
 
     /**
-     * @Description 解析Execl文件中的数据，此方法只解析了execl文件中的第一个sheet页，并且没有考虑第一行表头
      * @param path 文件地址
      * @return
+     * @Description 解析Execl文件中的数据，此方法只解析了execl文件中的第一个sheet页，并且没有考虑第一行表头
      */
-    public static List<List<String>> readExecl(String path){
+    public static List<List<String>> readExecl(String path) {
         List<List<String>> result = new ArrayList<>();
-        InputStream is = null;
-        try{
-            File excel = new File(path);
-            if (excel.isFile() && excel.exists()){
-                String fileType = path.substring(path.lastIndexOf(".") + 1);
-                //读取excel文件流
-                is = new FileInputStream(path);
-                //获取工作薄
-                Workbook wb = null;
-                if (fileType.equals("xls")) {
-                    wb = new HSSFWorkbook(is);
-                } else if (fileType.equals("xlsx")) {
-                    wb = new XSSFWorkbook(is);
-                } else {
-                    return null;
-                }
+        try {
+            //获取execl文件的个工作簿
+            Workbook wb = getWorkbook(path);
+            if (wb != null) {
                 //获取execl文件的的第一个sheet页
                 Sheet sheet = wb.getSheetAt(0);
                 for (Row row : sheet) {
@@ -47,56 +32,36 @@ public class ExeclUtil {
                     }
                     result.add(list);
                 }
-            }else{
+            } else {
                 System.out.println("找不到指定文件");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
-            try {
-                if (is != null){
-                    is.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
         return result;
     }
 
     /**
-     * @Description 解析Execl文件中的数据，此方法只解析了execl文件中的第一个sheet页，并且将第一列表头作为每行数据的key返回
      * @param path
      * @return
+     * @Description 解析Execl文件中的数据，此方法只解析了execl文件中的第一个sheet页，并且将第一列表头作为每行数据的key返回
      */
-    public static List<Map<String, Object>> readExeclByHead(String path){
+    public static List<Map<String, Object>> readExeclByHead(String path) {
         List<Map<String, Object>> result = new ArrayList<>();
-        InputStream is = null;
-        try{
-            File excel = new File(path);
-            if (excel.isFile() && excel.exists()){
-                String fileType = path.substring(path.lastIndexOf(".") + 1);
-                //读取excel文件流
-                is = new FileInputStream(path);
-                //获取工作薄
-                Workbook wb = null;
-                if (fileType.equals("xls")) {
-                    wb = new HSSFWorkbook(is);
-                } else if (fileType.equals("xlsx")) {
-                    wb = new XSSFWorkbook(is);
-                } else {
-                    return null;
-                }
+        try {
+            //获取execl文件的个工作簿
+            Workbook wb = getWorkbook(path);
+            if (wb != null) {
                 //获取execl文件的的第一个sheet页
                 Sheet sheet = wb.getSheetAt(0);
                 //获取第一行
                 Row row = sheet.getRow(0);
                 int firstRowNum = sheet.getFirstRowNum();
                 int lastRowNum = sheet.getLastRowNum();
-                for(int i = 1; i <= lastRowNum; i++){
+                for (int i = 1; i <= lastRowNum; i++) {
                     Map<String, Object> map = new HashMap<>();
                     Row row1 = sheet.getRow(i);
-                    if(row1 != null) {
+                    if (row1 != null) {
                         int firstCellNum = row1.getFirstCellNum();
                         int lastCellNum = row.getLastCellNum();
                         for (int j = firstCellNum; j <= lastCellNum; j++) {
@@ -109,20 +74,49 @@ public class ExeclUtil {
                         result.add(map);
                     }
                 }
-            }else{
+            } else {
                 System.out.println("找不到指定文件");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private static Workbook getWorkbook(String path) {
+        InputStream is = null;
+        try {
+            File excel = new File(path);
+            if (excel.isFile() && excel.exists()) {
+                String fileType = path.substring(path.lastIndexOf(".") + 1);
+                //读取excel文件流
+                is = new FileInputStream(path);
+                //获取工作薄
+                Workbook wb = null;
+                if (fileType.equals("xls")) {
+                    wb = new HSSFWorkbook(is);
+                } else if (fileType.equals("xlsx")) {
+                    wb = new XSSFWorkbook(is);
+                } else {
+                    return null;
+                }
+                return wb;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e){
             e.printStackTrace();
         }finally {
             try {
-                if (is != null){
+                if (is != null) {
                     is.close();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        return result;
+        return null;
     }
 }
